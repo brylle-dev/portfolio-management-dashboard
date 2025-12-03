@@ -1,0 +1,38 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:16
+    container_name: portfolio_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: portfolio
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - backend
+
+  # Optional: Prisma Studio for quick DB browsing
+  prisma-studio:
+    image: node:20
+    container_name: prisma_studio
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: >
+      sh -c "npx prisma studio"
+    depends_on:
+      - db
+    ports:
+      - "5555:5555"
+    networks:
+      - backend
+
+volumes:
+  pgdata:
+
+networks:
+  backend:

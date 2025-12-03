@@ -7,15 +7,16 @@ import pino from "pino";
 import pinoHttp from "pino-http";
 
 import { env } from "./config/env";
+import { globalRateLimiter } from "./middleware/rateLimit";
+import errorHandler from "./middleware/error";
 
-import healthRouter from "./routes/health";
+import { logger } from "./lib/logger";
+
+import { apiRouter } from "./routes";
 
 const app = express();
 
 // Logging
-const logger = pino({
-  level: env.NODE_ENV === "development" ? "debug" : "info",
-});
 app.use(pinoHttp({ logger }));
 
 // Security headers
@@ -34,7 +35,13 @@ app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 // Cookie parser
 app.use(cookieParser());
 
+// Rate Limiting
+app.use(globalRateLimiter);
+
 //Routers
-app.use("/api/health", healthRouter);
+app.use("/api", apiRouter);
+
+// Error Handler
+app.use(errorHandler);
 
 export default app;

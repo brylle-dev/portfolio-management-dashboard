@@ -1,10 +1,10 @@
-import { time } from "console";
 import { Router } from "express";
+import { OK } from "../../constants/http";
 
 const router = Router();
 
 router.get("/", (_req, res) => {
-  res.status(200).json({ status: "ok", time: new Date().toISOString() });
+  res.status(OK).json({ status: "ok", time: new Date().toISOString() });
 });
 
 export default router;
