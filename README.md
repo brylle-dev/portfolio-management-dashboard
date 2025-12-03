@@ -20,3 +20,11 @@ A portfolio management dashboard for tracking investments (stocks, bonds, mutual
 - **Frontend** Vite, React, TypeScript, React Query, React Router? Tanstack Router?, Zustand
 - **Backend** Node.js, TypeScript, Express, Prisma ORM
 - **Database** PostgreSQL
+
+## Installing
+
+**Running Prisma studio**
+
+```json
+   npx prisma studio
+```
