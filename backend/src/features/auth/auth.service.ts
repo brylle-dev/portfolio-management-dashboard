@@ -7,8 +7,9 @@ import { env } from "../../config/env";
 import { signAccessToken } from "../../middleware/auth";
 import { CONFLICT } from "../../constants/http";
 import { parseDuration } from "../../utils/date";
+import { Prisma } from "@prisma/client";
 
-const SALT_ROUNDS = 10;
+const SALT_ROUNDS = parseInt(env.BCRYPT_SALT_ROUNDS, 10);
 
 export const registerUser = async ({
   username,
@@ -43,18 +44,18 @@ export const registerUser = async ({
       },
     });
   } catch (error: any) {
-    const target = error.meta.target as string[] | string | undefined;
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      const target = error.meta?.target as string[] | undefined;
+      const field = target?.[0] ?? "field";
 
-    if (target && `${target}`.includes("email")) {
-      throw Object.assign(new Error("Email already in use"), {
+      throw Object.assign(new Error(`${field} already in use`), {
         statusCode: CONFLICT,
       });
     }
-    if (target && `${target}`.includes("username")) {
-      throw Object.assign(new Error("Username already in taken"), {
-        statusCode: CONFLICT,
-      });
-    }
+
     throw error;
   }
 };
