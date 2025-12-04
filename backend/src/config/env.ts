@@ -19,6 +19,7 @@ interface Env {
   JWT_REFRESH_EXPIRES_IN: string;
   CORS_ORIGIN: string[];
   COOKIE_DOMAIN: string;
+  BCRYPT_SALT_ROUNDS: string;
 }
 
 export const env: Env = {
@@ -35,4 +36,5 @@ export const env: Env = {
     .filter(Boolean),
 
   COOKIE_DOMAIN: process.env.COOKIE_DOMAIN ?? "localhost",
+  BCRYPT_SALT_ROUNDS: process.env.BCRYPT_SALT_ROUNDS ?? "12",
 };
