@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { authRateLimiter } from "../../middleware/rateLimit";
 import { asyncHandler, validate } from "../../middleware/http";
-import { registerSchema, loginSchema } from "./auth.schema";
+import { registerSchema, loginSchema } from "./auth.types";
 import { register, login, me, refresh, logout } from "./auth.controller";
 import { requireAuth } from "../../middleware/auth";
 

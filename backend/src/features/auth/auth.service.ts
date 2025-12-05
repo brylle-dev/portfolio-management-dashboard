@@ -8,47 +8,30 @@ import { signAccessToken } from "../../middleware/auth";
 import { CONFLICT } from "../../constants/http";
 import { parseDuration } from "../../utils/date";
 import { Prisma } from "@prisma/client";
+import { compareValue, hashValue } from "../../utils/bcrypt";
+import { RegisterDTO } from "./auth.types";
 
 const SALT_ROUNDS = parseInt(env.BCRYPT_SALT_ROUNDS, 10);
 
-export const registerUser = async ({
-  username,
-  email,
-  password,
-  firstName,
-  lastName,
-}: {
-  username: string;
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-}) => {
-  const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+export const registerUser = async (dto: RegisterDTO) => {
+  const hashedPassword = await hashValue(dto.password, SALT_ROUNDS);
   try {
     return await prisma.user.create({
       data: {
-        username,
-        email,
-        password: hashedPassword,
-        first_name: firstName,
-        last_name: lastName,
+        email: dto.email,
+        passwordHash: hashedPassword,
       },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        first_name: true,
-        last_name: true,
-        createdAt: true,
+      omit: {
+        passwordHash: true,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2002"
     ) {
-      const target = error.meta?.target as string[] | undefined;
+      const target = (error.meta?.driverAdapterError as any).cause?.constraint
+        ?.fields as string[] | undefined;
       const field = target?.[0] ?? "field";
 
       throw Object.assign(new Error(`${field} already in use`), {
@@ -78,7 +61,7 @@ export const verifyCredentials = async (
     return null;
   }
 
-  const passwordOk = await bcrypt.compare(password, user.password);
+  const passwordOk = await compareValue(password, user.passwordHash);
   if (!passwordOk) {
     return null;
   }

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import { RegisterDTO, LoginDTO } from "./auth.schema";
+import { RegisterDTO, LoginDTO } from "./auth.types";
 import {
   registerUser,
   verifyCredentials,
@@ -13,8 +13,15 @@ import {
 
 import { env } from "../../config/env";
 import { msFromDuration } from "../../utils/date";
-import { BAD_REQUEST, CREATED, OK, UNAUTHORIZED } from "../../constants/http";
-import { logger } from "../../lib/logger";
+import {
+  BAD_REQUEST,
+  CONFLICT,
+  CREATED,
+  INTERNAL_SERVER_ERROR,
+  OK,
+  UNAUTHORIZED,
+} from "../../constants/http";
+import catchErrors from "../../utils/catchErrors";
 
 const setRefreshTokenCookie = (res: Response, token: string) => {
   res.cookie("refresh_token", token, {
@@ -42,33 +49,43 @@ const clearRefreshTokenCookie = (res: Response) => {
  * @param req
  * @param res
  */
-export const register = async (req: Request, res: Response) => {
-  const { username, email, password, firstName, lastName } = (req as any)
-    .validated as RegisterDTO;
-  const user = await registerUser({
-    username,
-    email,
-    password,
-    firstName,
-    lastName,
-  });
-  res.status(CREATED).json({
-    message: "User registered successfully",
-    user: { id: user.id, username: user.username, email: user.email },
-  });
-};
+export const register = catchErrors(async (req: Request, res: Response) => {
+  try {
+    const user = await registerUser(req.body);
+
+    res.status(CREATED).json({
+      message: "User registered successfully",
+      user: {
+        id: user.id,
+        email: user.email,
+      },
+    });
+  } catch (error: any) {
+    console.error("Error in register:", error);
+
+    // Use statusCode from service, or default to 500
+    const status = error.statusCode || INTERNAL_SERVER_ERROR;
+
+    res.status(status).json({
+      message:
+        status === CONFLICT
+          ? error.message // e.g. "email already in use"
+          : "An unexpected error occurred.",
+    });
+  }
+});
+
 /**
  * Login user
  *
  */
-export const login = async (req: Request, res: Response) => {
-  const { identifier, password } = (req as any).validated as LoginDTO;
+export const login = catchErrors(async (req: Request, res: Response) => {
+  const { identifier, password } = req.body;
   const user = await verifyCredentials(identifier, password);
   if (!user) {
     return res.status(UNAUTHORIZED).json({ message: "Invalid credentials" });
   }
   const accessToken = await issueAccessToken(user.id);
-  console.log("ISSUED ACCESS TOKEN", accessToken);
   const rawRefreshToken = await generateRefreshToken();
   await persistRefreshToken(user.id, rawRefreshToken);
   setRefreshTokenCookie(res, rawRefreshToken);
@@ -77,13 +94,13 @@ export const login = async (req: Request, res: Response) => {
     token_type: "Bearer",
     expires_in: env.JWT_EXPIRES_IN,
   });
-};
+});
 
 /**
  * ME
  */
 export const me = async (req: Request, res: Response) => {
-  return res.status(OK).json({ user: (req as any).user });
+  return res.status(OK).json({ user: req.user });
 };
 
 /** Refresh  */

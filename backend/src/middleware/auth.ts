@@ -35,7 +35,7 @@ export const requireAuth = (
   const token = authHeader.slice("Bearer ".length);
   try {
     const payload = verifyAccessToken(token);
-    (req as any).user = payload; // Attach payload to request object
+    req.user = payload; // Attach payload to request object
     next();
   } catch (err) {
     return res.status(401).json({ message: "Invalid or expired token" });
