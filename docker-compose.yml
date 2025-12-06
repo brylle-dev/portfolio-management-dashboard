@@ -1,38 +1,77 @@
-version: "3.9"
-services:
-  db:
-    image: postgres:16
-    container_name: portfolio_db
-    restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: portfolio
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    networks:
-      - backend
+name: ${COMPOSE_PROJECT_NAME:-investment-portfolio}
 
-  # Optional: Prisma Studio for quick DB browsing
-  prisma-studio:
-    image: node:20
-    container_name: prisma_studio
-    working_dir: /app
-    volumes:
-      - .:/app
-    command: >
-      sh -c "npx prisma studio"
-    depends_on:
-      - db
+services:
+  postgres:
+    image: postgres:16
+    container_name: investment_portfolio_db
+    env_file:
+      - ./backend/.env.development
+    # environment:
+    #   POSTGRES_USER: ${POSTGRES_USER}
+    #   POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    #   POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5555:5555"
-    networks:
-      - backend
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d investment_portfolio"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: portfolio_backend_dev
+    env_file:
+      - ./backend/.env.development
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${API_PORT:-3000}:3000"
+    command: >
+      sh -c "
+        npx prisma generate --config ./prisma.config.ts &&
+        npx prisma migrate deploy --config ./prisma.config.ts &&
+        if [ \"$RUN_SEED\" = \"true\" ]; then
+          npx prisma db seed --config ./prisma.config.ts;
+        fi &&
+        node dist/server.js
+      "
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: portfolio_frontend_dev
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      - "${FRONTEND_PORT:-8080}:8080"
+    restart: unless-stopped
+
+  prisma-studio:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: investment_portfolio_prisma_studio_dev
+    env_file:
+      - ./backend/.env.development
+    # environment:
+    #   NODE_ENV: ${NODE_ENV}
+    #   DATABASE_URL: ${DATABASE_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["npx", "prisma", "studio", "--port", "5555", "--browser", "none"]
+    ports:
+      - "${PRISMA_STUDIO_PORT:-5555}:5555"
+    restart: unless-stopped
 
 volumes:
-  pgdata:
-
-networks:
-  backend:
+  pgdata_dev:

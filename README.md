@@ -28,3 +28,5 @@ A portfolio management dashboard for tracking investments (stocks, bonds, mutual
 ```json
    npx prisma studio
 ```
+
+docker compose --env-file ./backend/.env.development up --build
