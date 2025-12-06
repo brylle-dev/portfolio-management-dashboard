@@ -3,16 +3,14 @@ import helmet from "helmet";
 import cors from "cors";
 import compression from "compression";
 import cookieParser from "cookie-parser";
-import pino from "pino";
 import pinoHttp from "pino-http";
 
-import { env } from "./config/env";
 import { globalRateLimiter } from "./middleware/rateLimit";
 import errorHandler from "./middleware/error";
 
 import { logger } from "./lib/logger";
 
-import { apiRouter } from "./routes";
+import { apiRouter } from "./routes/index";
 
 const app = express();
 
@@ -23,7 +21,11 @@ app.use(pinoHttp({ logger }));
 app.use(helmet());
 
 // CORS
-app.use(cors());
+app.use(
+  cors({
+    origin: true,
+  })
+);
 
 // Gzip compression
 app.use(compression());

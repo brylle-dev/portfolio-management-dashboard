@@ -182,7 +182,7 @@ async function seedTransations(
       unitPrice: "150.000000",
       fees: "2.500000",
       tradeDate: new Date(d(7)),
-      settlementDare: new Date(d(5)),
+      settlementDate: new Date(d(5)),
       notes: "Initial AAPL buy",
     },
   });
@@ -197,7 +197,7 @@ async function seedTransations(
       unitPrice: "420.000000",
       fees: "0.000000",
       tradeDate: new Date(d(6)),
-      settlementDare: new Date(d(4)),
+      settlementDate: new Date(d(4)),
       notes: "Dollar-cost averaging",
     },
   });
@@ -212,7 +212,7 @@ async function seedTransations(
       unitPrice: "990.000000",
       fees: "5.000000",
       tradeDate: new Date(d(5)),
-      settlementDare: new Date(d(3)),
+      settlementDate: new Date(d(3)),
       notes: "Treasury ladder",
     },
   });
@@ -227,7 +227,7 @@ async function seedTransations(
       unitPrice: "165.000000",
       fees: "1.500000",
       tradeDate: new Date(d(2)),
-      settlementDare: new Date(d(1)),
+      settlementDate: new Date(d(1)),
       notes: "Trim position",
     },
   });

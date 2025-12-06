@@ -11,7 +11,7 @@ export const validate =
     const parsed = schema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json({
-        message: "Validation error",
+        message: "Invalid payload",
         errors: parsed.error.issues.map((issue) => ({
           path: issue.path,
           message: issue.message,
