@@ -6,6 +6,10 @@ export interface JwtPayload {
   sub: string;
 }
 
+export interface UserRequest extends Request {
+  user?: JwtPayload;
+}
+
 const options = {
   expiresIn: env.JWT_EXPIRES_IN ?? "15m",
 } as SignOptions;
@@ -14,30 +18,28 @@ export const signAccessToken = (payload: JwtPayload) =>
   jwt.sign(payload, env.JWT_SECRET, options);
 
 export const verifyAccessToken = (token: string): JwtPayload => {
-  try {
-    return jwt.verify(token, env.JWT_SECRET) as JwtPayload;
-  } catch (err) {
-    throw new Error("Invalid or expired token");
-  }
+  return jwt.verify(token, env.JWT_SECRET) as JwtPayload;
 };
 
 export const requireAuth = (
-  req: Request,
+  req: UserRequest,
   res: Response,
   next: NextFunction
 ) => {
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  if (!authHeader?.startsWith("Bearer ")) {
     return res
       .status(401)
       .json({ message: "Authorization header missing or malformed" });
   }
-  const token = authHeader.slice("Bearer ".length);
+
+  const token = authHeader.substring("Bearer ".length);
+
   try {
     const payload = verifyAccessToken(token);
-    req.user = payload; // Attach payload to request object
+    req.user = payload;
     next();
-  } catch (err) {
+  } catch {
     return res.status(401).json({ message: "Invalid or expired token" });
   }
 };

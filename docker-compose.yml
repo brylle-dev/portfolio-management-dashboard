@@ -6,10 +6,6 @@ services:
     container_name: investment_portfolio_db
     env_file:
       - ./backend/.env.development
-    # environment:
-    #   POSTGRES_USER: ${POSTGRES_USER}
-    #   POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    #   POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
@@ -52,7 +48,7 @@ services:
       backend:
         condition: service_started
     ports:
-      - "${FRONTEND_PORT:-8080}:8080"
+      - "${FRONTEND_PORT:-5173}:5173"
     restart: unless-stopped
 
   prisma-studio:
@@ -62,9 +58,6 @@ services:
     container_name: investment_portfolio_prisma_studio_dev
     env_file:
       - ./backend/.env.development
-    # environment:
-    #   NODE_ENV: ${NODE_ENV}
-    #   DATABASE_URL: ${DATABASE_URL}
     depends_on:
       postgres:
         condition: service_healthy

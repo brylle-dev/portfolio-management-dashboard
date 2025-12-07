@@ -83,13 +83,16 @@ export const login = catchErrors(async (req: Request, res: Response) => {
   const { identifier, password } = req.body;
   const user = await verifyCredentials(identifier, password);
   if (!user) {
-    return res.status(UNAUTHORIZED).json({ message: "Invalid credentials" });
+    return res
+      .status(UNAUTHORIZED)
+      .json({ ok: false, message: "Invalid credentials" });
   }
   const accessToken = await issueAccessToken(user.id);
   const rawRefreshToken = await generateRefreshToken();
   await persistRefreshToken(user.id, rawRefreshToken);
   setRefreshTokenCookie(res, rawRefreshToken);
   return res.status(OK).json({
+    ok: true,
     access_token: accessToken,
     token_type: "Bearer",
     expires_in: env.JWT_EXPIRES_IN,

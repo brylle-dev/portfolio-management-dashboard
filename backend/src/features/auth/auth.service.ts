@@ -18,7 +18,7 @@ export const registerUser = async (dto: RegisterDTO) => {
   try {
     return await prisma.user.create({
       data: {
-        email: dto.email,
+        ...dto,
         passwordHash: hashedPassword,
       },
       omit: {
@@ -84,16 +84,13 @@ export const persistRefreshToken = async (userId: string, rawToken: string) => {
   const tokenHash = await bcrypt.hash(rawToken, SALT_ROUNDS);
   const duration = parseDuration(env.JWT_REFRESH_EXPIRES_IN);
   const expiresAt = add(new Date(), { [duration.unit]: duration.amount });
+
+  // delete previous tokens
+  await prisma.refreshToken.deleteMany({ where: { userId } });
+
   return prisma.refreshToken.create({
-    data: {
-      userId,
-      tokenHash,
-      expiresAt,
-    },
-    select: {
-      id: true,
-      expiresAt: true,
-    },
+    data: { userId, tokenHash, expiresAt },
+    select: { id: true, expiresAt: true },
   });
 };
 
@@ -105,21 +102,8 @@ export const revokeRefreshTokenByRaw = async (
   userId?: string
 ) => {
   if (!userId) return false;
-  const tokens = await prisma.refreshToken.findMany({
-    where: { userId, revokedAt: null },
-  });
-  for (const token of tokens) {
-    const match = await bcrypt.compare(rawToken, token.tokenHash);
-    if (match) {
-      await prisma.refreshToken.update({
-        where: { id: token.id },
-        data: { revokedAt: new Date() },
-      });
-
-      return true;
-    }
-  }
-  return false;
+  await prisma.refreshToken.deleteMany({ where: { userId } });
+  return true;
 };
 
 /**
