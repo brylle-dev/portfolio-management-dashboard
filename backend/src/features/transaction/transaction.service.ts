@@ -34,6 +34,21 @@ export const listTxns = async (portfolioId: string): Promise<unknown[]> => {
 };
 
 export const createTxn = async (dto: CreateTxnDto): Promise<{ id: string }> => {
+  if (dto.txnType === "sell") {
+    const position = await prisma.position.findUnique({
+      where: {
+        portfolioId_instrumentId: {
+          portfolioId: dto.portfolioId,
+          instrumentId: dto.instrumentId,
+        },
+      },
+    });
+
+    if (!position || position.quantity.lt(dto.quantity)) {
+      throw new Error("Insufficient quantity to sell");
+    }
+  }
+
   const created = await prisma.transaction.create({
     data: {
       ...dto,
@@ -46,7 +61,5 @@ export const createTxn = async (dto: CreateTxnDto): Promise<{ id: string }> => {
 
   await recomputePosition(dto.portfolioId, dto.instrumentId);
 
-  return {
-    id: created.id,
-  };
+  return { id: created.id };
 };

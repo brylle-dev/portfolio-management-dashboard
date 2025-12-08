@@ -6,7 +6,7 @@ import { router } from "@/lib/router";
 import AppProviders from "./providers/AppProviders";
 import { queryClient } from "./providers/QueryProviders";
 import "./index.css";
-import { ThemeProvider } from "./components/theme-provider";
+import { ThemeProvider } from "./components/ThemeProvider";
 
 // Render the app
 const rootElement = document.getElementById("root")!;

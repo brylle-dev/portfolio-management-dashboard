@@ -36,7 +36,6 @@ model User {
   // relations
   refreshtokens RefreshToken[]
   portfolios    Portfolio[]
-  auditLogs     AuditLog[]
 }
 
 model RefreshToken {
@@ -67,7 +66,6 @@ model Portfolio {
   // relations
   transactions Transaction[]
   positions    Position[]
-  snapshots    PortfolioSnapshot[]
 
   @@index([userId])
   @@index([name])
@@ -150,34 +148,4 @@ model Position {
   @@unique([portfolioId, instrumentId]) // one position per instrument per portfolio
   @@index([portfolioId])
   @@index([instrumentId])
-}
-
-model PortfolioSnapshot {
-  portfolioId   String
-  snapshotDate  DateTime @db.Date
-  marketValue   Decimal  @db.Decimal(18, 6)
-  cashFlow      Decimal  @default(0) @db.Decimal(18, 6)
-  realizePnl    Decimal  @default(0) @db.Decimal(18, 6)
-  unrealizedPnl Decimal  @default(0) @db.Decimal(18, 6)
-
-  portfolio Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
-
-  @@id([portfolioId, snapshotDate])
-  @@index([snapshotDate])
-}
-
-model AuditLog {
-  id         String   @id @default(cuid())
-  userId     String?
-  entityType String
-  entityId   String
-  action     String
-  oldValue   Json?
-  newValue   Json?
-  createdAt  DateTime @default(now()) @db.Timestamptz()
-
-  user User? @relation(fields: [userId], references: [id])
-
-  @@index([entityType, entityId])
-  @@index([userId])
 }

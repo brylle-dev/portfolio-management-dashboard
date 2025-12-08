@@ -1,4 +1,4 @@
-import AppLayout from "@/components/app-layout";
+import AppLayout from "@/components/AppLayout";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 

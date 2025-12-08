@@ -302,72 +302,72 @@ async function reconcilePositions(
   }
 }
 
-async function seedPortfolioSnapshots(portfolioId: string) {
-  const portfolio = await prisma.portfolio.findUnique({
-    where: { id: portfolioId },
-    include: {
-      positions: { include: { instrument: true } },
-    },
-  });
+// async function seedPortfolioSnapshots(portfolioId: string) {
+//   const portfolio = await prisma.portfolio.findUnique({
+//     where: { id: portfolioId },
+//     include: {
+//       positions: { include: { instrument: true } },
+//     },
+//   });
 
-  if (!portfolio) throw new Error("Portfolio not found");
+//   if (!portfolio) throw new Error("Portfolio not found");
 
-  // Collect all unique price dates
-  const priceDates = await prisma.instrumentPrice.findMany({
-    distinct: ["priceDate"],
-    orderBy: { priceDate: "asc" },
-    take: 5, // last 5 days (optional)
-  });
+//   // Collect all unique price dates
+//   const priceDates = await prisma.instrumentPrice.findMany({
+//     distinct: ["priceDate"],
+//     orderBy: { priceDate: "asc" },
+//     take: 5, // last 5 days (optional)
+//   });
 
-  for (const pd of priceDates) {
-    const snapshotDate = pd.priceDate;
-    let totalMarketValue = 0;
-    let totalUnrealizedPnl = 0;
+//   for (const pd of priceDates) {
+//     const snapshotDate = pd.priceDate;
+//     let totalMarketValue = 0;
+//     let totalUnrealizedPnl = 0;
 
-    for (const pos of portfolio.positions) {
-      const price = await prisma.instrumentPrice.findUnique({
-        where: {
-          instrumentId_priceDate: {
-            instrumentId: pos.instrumentId,
-            priceDate: snapshotDate,
-          },
-        },
-      });
+//     for (const pos of portfolio.positions) {
+//       const price = await prisma.instrumentPrice.findUnique({
+//         where: {
+//           instrumentId_priceDate: {
+//             instrumentId: pos.instrumentId,
+//             priceDate: snapshotDate,
+//           },
+//         },
+//       });
 
-      if (!price) continue;
+//       if (!price) continue;
 
-      const marketValue = Number(pos.quantity) * Number(price.closePrice);
-      const unrealizedPnl =
-        (Number(price.closePrice) - Number(pos.avgCost)) * Number(pos.quantity);
+//       const marketValue = Number(pos.quantity) * Number(price.closePrice);
+//       const unrealizedPnl =
+//         (Number(price.closePrice) - Number(pos.avgCost)) * Number(pos.quantity);
 
-      totalMarketValue += marketValue;
-      totalUnrealizedPnl += unrealizedPnl;
-    }
+//       totalMarketValue += marketValue;
+//       totalUnrealizedPnl += unrealizedPnl;
+//     }
 
-    await prisma.portfolioSnapshot.upsert({
-      where: {
-        portfolioId_snapshotDate: {
-          portfolioId,
-          snapshotDate,
-        },
-      },
-      update: {
-        marketValue: totalMarketValue.toFixed(6),
-        unrealizedPnl: totalUnrealizedPnl.toFixed(6),
-      },
-      create: {
-        portfolioId,
-        snapshotDate,
-        marketValue: totalMarketValue.toFixed(6),
-        unrealizedPnl: totalUnrealizedPnl.toFixed(6),
-        cashFlow: "0",
-        realizePnl: "0",
-      },
-    });
-  }
+//     await prisma.portfolioSnapshot.upsert({
+//       where: {
+//         portfolioId_snapshotDate: {
+//           portfolioId,
+//           snapshotDate,
+//         },
+//       },
+//       update: {
+//         marketValue: totalMarketValue.toFixed(6),
+//         unrealizedPnl: totalUnrealizedPnl.toFixed(6),
+//       },
+//       create: {
+//         portfolioId,
+//         snapshotDate,
+//         marketValue: totalMarketValue.toFixed(6),
+//         unrealizedPnl: totalUnrealizedPnl.toFixed(6),
+//         cashFlow: "0",
+//         realizePnl: "0",
+//       },
+//     });
+//   }
 
-  console.log(`Snapshots created for portfolio ${portfolioId}`);
-}
+//   console.log(`Snapshots created for portfolio ${portfolioId}`);
+// }
 
 async function main() {
   console.log("Seeding: instruments...");
@@ -396,8 +396,8 @@ async function main() {
   console.log("Reconciling positions...");
   await reconcilePositions(portfolio.id, mapIdBySymbol);
 
-  console.log("Creating portfolio snapshots...");
-  await seedPortfolioSnapshots(portfolio.id);
+  // console.log("Creating portfolio snapshots...");
+  // await seedPortfolioSnapshots(portfolio.id);
 
   console.log("Seed complete");
 }

@@ -42,8 +42,6 @@ export const overviewPortfolioCtrl = catchErrors(
     }
 
     const { id } = req.params;
-    console.log("🚀 ~ req.params:", req.params);
-    console.log("🚀 ~ ID:", id);
     const data = await overview(id);
     res.status(OK).json(data);
   }

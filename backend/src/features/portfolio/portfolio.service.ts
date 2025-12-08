@@ -22,58 +22,32 @@ export const createPortfolio = async (
   return await prisma.portfolio.create({ data: { userId, ...dto } });
 };
 
-export const overview = async (portfolioId: string): Promise<unknown[]> => {
+export const overview = async (portfolioId: string) => {
   const positions = await prisma.position.findMany({
     where: { portfolioId },
     include: {
-      instrument: {
-        select: {
-          symbol: true,
-          name: true,
-          assetClass: true,
-        },
-      },
+      instrument: { select: { symbol: true, name: true, assetClass: true } },
     },
   });
 
-  const result: Array<{
-    instrumentId: string;
-    symbol: string;
-    name: string;
-    assetClass: string;
-    quantity: string;
-    avgCost: string;
-    latestPrice: string | null;
-    currentValue: string | null;
-    unrealizePnl: string | null;
-  }> = [];
+  return positions.map((pos) => {
+    const qty = Number(pos.quantity);
+    const avgCost = Number(pos.avgCost);
+    const marketValue = pos.marketValue ? Number(pos.marketValue) : null;
+    const costBasis = qty * avgCost;
+    const unrealizedPnl =
+      marketValue !== null ? (marketValue - costBasis).toFixed(2) : null;
 
-  for (const pos of positions) {
-    const latest = await prisma.instrumentPrice.findFirst({
-      where: {
-        instrumentId: pos.instrumentId,
-      },
-      orderBy: { priceDate: "desc" },
-    });
-    const latestPrice = latest?.closePrice ?? null;
-    const currentValue = latestPrice
-      ? (Number(pos.quantity) * Number(latestPrice)).toFixed(2)
-      : null;
-    const costBasis = (Number(pos.quantity) * Number(pos.avgCost)).toFixed(2);
-    const unrealized = currentValue
-      ? (Number(currentValue) - Number(costBasis)).toFixed(2)
-      : null;
-
-    result.push({
+    return {
       instrumentId: pos.instrumentId,
-      ...pos.instrument,
+      symbol: pos.instrument.symbol,
+      name: pos.instrument.name,
+      assetClass: pos.instrument.assetClass,
       quantity: pos.quantity.toString(),
       avgCost: pos.avgCost.toString(),
-      latestPrice: latestPrice ? latestPrice.toString() : null,
-      currentValue,
-      unrealizePnl: unrealized,
-    });
-  }
-
-  return result;
+      latestPrice: pos.lastMarkPrice?.toString() ?? null,
+      currentValue: pos.marketValue?.toString() ?? null,
+      unrealizedPnl,
+    };
+  });
 };

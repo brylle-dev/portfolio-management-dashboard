@@ -78,7 +78,7 @@ export function LoginForm() {
                 />
               </Field>
               <Field>
-                <Button type="submit" className="text-accent-foreground">
+                <Button type="submit">
                   {loginMutation.isPending ? "Logging in..." : "Login"}
                 </Button>
                 <FieldDescription className="text-center">

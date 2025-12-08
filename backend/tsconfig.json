@@ -9,8 +9,7 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "resolveJsonModule": true,
-    "noImplicitAny": true,
+    "resolveJsonModule": true
   },
   "baseUrl": "./src",
   "paths": {
