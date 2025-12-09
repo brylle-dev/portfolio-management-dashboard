@@ -1,4 +1,3 @@
-// src/features/portfolio/components/WelcomeScreen.tsx
 import { Button } from "@/components/ui/button";
 import { FolderPlus } from "lucide-react";
 import { useRouter } from "@tanstack/react-router";

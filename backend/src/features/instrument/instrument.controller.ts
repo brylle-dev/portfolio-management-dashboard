@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { listInstruments } from "./instrument.service";
-import { OK } from "../../constants/http";
+import { OK, UNAUTHORIZED } from "../../constants/http";
 import catchErrors from "../../utils/catchErrors";
 
 export const listInstrumentCtrl = catchErrors(

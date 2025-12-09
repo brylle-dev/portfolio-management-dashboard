@@ -1,4 +1,4 @@
-export type TxnType = "buy" | "sell";
+export type TxnType = "buy" | "sell" | "adjust";
 
 export interface Transaction {
   id: string;

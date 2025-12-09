@@ -20,69 +20,104 @@ import {
 import { useCreateTransaction } from "../hooks/useTransaction";
 import { InstrumentList } from "@/features/instrument/components/InstrumentList";
 import { useInstrumentStore } from "@/features/instrument/store/instrument.store";
+import type { TxnType } from "../types/transaction.types";
+import { EditIcon } from "lucide-react";
 
-export function TransactionDialog({ portfolioId }: { portfolioId: string }) {
+interface TransactionDialogProps {
+  portfolioId: string;
+  defaultInstrument?: {
+    id: string;
+    symbol: string;
+    name: string;
+  };
+  defaultTxnType?: "buy" | "sell" | "adjust";
+  triggerLabel?: string;
+  onSuccess?: () => void;
+}
+
+export function TransactionDialog({
+  portfolioId,
+  defaultInstrument,
+  defaultTxnType = "buy",
+  triggerLabel = "Add Transaction",
+  onSuccess,
+}: TransactionDialogProps) {
   const createTxn = useCreateTransaction();
-  const { selectedInstrumentId } = useInstrumentStore();
+  const { selectedInstrumentId, setSelectedInstrumentId } =
+    useInstrumentStore();
   const [open, setOpen] = useState(false);
+
   const [form, setForm] = useState({
     instrumentId: "",
-    txnType: "buy",
+    txnType: defaultTxnType,
     quantity: "",
     unitPrice: "",
     fees: "0",
     tradeDate: "",
   });
 
-  // ✅ close dialog automatically on success
+  // Prefill when editing a holding
+  useEffect(() => {
+    if (defaultInstrument) {
+      setForm((prev) => ({
+        ...prev,
+        instrumentId: defaultInstrument.id,
+      }));
+      setSelectedInstrumentId(defaultInstrument.id);
+    }
+  }, [defaultInstrument, setSelectedInstrumentId]);
+
+  // Reset and close after success
   useEffect(() => {
     if (createTxn.isSuccess) {
       setOpen(false);
-      // optional: reset form for next time
       setForm({
         instrumentId: "",
-        txnType: "buy",
+        txnType: defaultTxnType,
         quantity: "",
         unitPrice: "",
         fees: "0",
         tradeDate: "",
       });
+      onSuccess?.();
     }
-  }, [createTxn.isSuccess]);
+  }, [createTxn.isSuccess, defaultTxnType, onSuccess]);
 
   const submit = () => {
     createTxn.mutate({
       portfolioId,
       ...form,
-
-      instrumentId: selectedInstrumentId || "",
-      txnType: form.txnType as "buy" | "sell",
+      instrumentId: defaultInstrument?.id || selectedInstrumentId || "",
+      txnType: form.txnType as TxnType,
     });
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Add Transaction</Button>
+        <Button variant={defaultInstrument ? "ghost" : "default"}>
+          {defaultInstrument ? <EditIcon /> : triggerLabel}
+        </Button>
       </DialogTrigger>
 
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>New Transaction</DialogTitle>
+          <DialogTitle>
+            {defaultInstrument
+              ? `Record ${form.txnType.toUpperCase()} for ${defaultInstrument.symbol}`
+              : "New Transaction"}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="grid gap-3">
-          {/* <Input
-            placeholder="Instrument ID"
-            value={form.instrumentId}
-            onChange={(e) => setForm({ ...form, instrumentId: e.target.value })}
-          /> */}
-
-          <InstrumentList />
+          {/* Instrument selection (hidden if editing) */}
+          {!defaultInstrument && <InstrumentList />}
 
           <Select
             value={form.txnType}
-            onValueChange={(v) => setForm({ ...form, txnType: v })}
+            onValueChange={(val) =>
+              setForm({ ...form, txnType: val as TxnType })
+            }
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select a transaction" />
@@ -98,16 +133,19 @@ export function TransactionDialog({ portfolioId }: { portfolioId: string }) {
 
           <Input
             placeholder="Quantity"
+            type="number"
             value={form.quantity}
             onChange={(e) => setForm({ ...form, quantity: e.target.value })}
           />
           <Input
             placeholder="Unit Price"
+            type="number"
             value={form.unitPrice}
             onChange={(e) => setForm({ ...form, unitPrice: e.target.value })}
           />
           <Input
             placeholder="Fees"
+            type="number"
             value={form.fees}
             onChange={(e) => setForm({ ...form, fees: e.target.value })}
           />
@@ -118,7 +156,7 @@ export function TransactionDialog({ portfolioId }: { portfolioId: string }) {
           />
 
           <Button onClick={submit} disabled={createTxn.isPending}>
-            {form.txnType.toUpperCase()}
+            {createTxn.isPending ? "Saving..." : form.txnType.toUpperCase()}
           </Button>
         </div>
       </DialogContent>

@@ -26,7 +26,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             >
               <Link to="/dashboard" className="text-foreground">
                 <ChartCandlestick />
-                <span className="text-base font-semibold">Acme Inc.</span>
+                <span className="text-base font-semibold">
+                  Portfolio Management
+                </span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

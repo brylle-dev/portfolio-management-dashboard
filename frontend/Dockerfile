@@ -17,5 +17,5 @@ RUN npm ci --omit=dev
 
 COPY --from=builder /app/dist ./dist
 
-EXPOSE 8080
-CMD ["npx", "vite", "preview", "--port", "8080", "--host"]
+EXPOSE 5173
+CMD ["npx", "vite", "preview", "--port", "5173", "--host"]
