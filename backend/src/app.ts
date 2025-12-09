@@ -1,0 +1,50 @@
+import express from "express";
+import helmet from "helmet";
+import cors from "cors";
+import compression from "compression";
+import cookieParser from "cookie-parser";
+import pinoHttp from "pino-http";
+
+import { globalRateLimiter } from "./middleware/rateLimit";
+import errorHandler from "./middleware/error";
+
+import { logger } from "./lib/logger";
+
+import { apiRouter } from "./routes/index";
+
+const app = express();
+
+// Logging
+app.use(pinoHttp({ logger }));
+
+// Security headers
+app.use(helmet());
+
+// CORS
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+  })
+);
+
+// Gzip compression
+app.use(compression());
+
+// Body parsers
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
+
+// Cookie parser
+app.use(cookieParser());
+
+// Rate Limiting
+app.use(globalRateLimiter);
+
+//Routers
+app.use("/api", apiRouter);
+
+// Error Handler
+app.use(errorHandler);
+
+export default app;
