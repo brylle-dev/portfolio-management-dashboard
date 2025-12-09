@@ -23,6 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 
-# Tanstack Router generated files
-.tanstack/
-src/routeTree.gen.ts
+# # Tanstack Router generated files
+# .tanstack/
+# src/routeTree.gen.ts
